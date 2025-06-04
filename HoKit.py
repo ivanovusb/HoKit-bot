@@ -2,7 +2,9 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 # Твой Telegram ID для пересылки сообщений от пользователей
-YOUR_TELEGRAM_ID = 5367779554  # Замени на свой ID
+
+YOUR_TELEGRAM_ID = os.getenv("YOUR_TELEGRAM_ID")# Мой ID чата
+TOKEN = os.getenv("TOKEN")# мой Токен ТГ
 
 # Приветственное сообщение
 WELCOME_MESSAGE = (
@@ -122,7 +124,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
-    app = ApplicationBuilder().token("7306559527:AAEqvoQFc9-dhdkzWUTtEsKjWt4o_OjepEg").build()  # Замени YOUR_BOT_TOKEN на реальный токен
+    app = ApplicationBuilder().token("TOKEN").build()  # Замени YOUR_BOT_TOKEN на реальный токен
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

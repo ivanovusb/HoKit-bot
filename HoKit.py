@@ -163,7 +163,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
         except Exception as inner_exc:
             logger.error(f"Не удалось отправить сообщение об ошибке: {inner_exc}")
 
-app.add_error_handler(error_handler)
+
 
 
 if __name__ == '__main__':

@@ -125,7 +125,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
-    app = ApplicationBuilder().token("TOKEN").build()  # Замени YOUR_BOT_TOKEN на реальный токен
+    app = ApplicationBuilder().token(TOKEN).build()  # Замени YOUR_BOT_TOKEN на реальный токен
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

@@ -5,7 +5,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 # Твой Telegram ID для пересылки сообщений от пользователей
 
 YOUR_TELEGRAM_ID = os.getenv("YOUR_TELEGRAM_ID")# Мой ID чата
-TOKEN = os.getenv("TOKEN")# мой Токен ТГ
+TOKEN = os.getenv("TOKEN")
+if not TOKEN:
+    raise ValueError("Не задана переменная окружения TOKEN")
 
 # Приветственное сообщение
 WELCOME_MESSAGE = (

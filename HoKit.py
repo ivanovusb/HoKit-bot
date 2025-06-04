@@ -1,6 +1,15 @@
 import os
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+import logging  # <<< Новый импорт
+from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+
+# Настройка логгера
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+logger = logging.getLogger(__name__)
 
 # Твой Telegram ID для пересылки сообщений от пользователей
 
@@ -122,19 +131,39 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_state.get(user_id) != STATE_CUSTOM_ORDER:
         return
-
+    
+    logger.info(f"Пользователь {user_id} отправил фото")
     await update.message.reply_text("Фото получено. Теперь добавьте текстовое описание.")
 
 
 def main():
+    logger.info("Запуск бота")
     app = ApplicationBuilder().token(TOKEN).build()  # Замени YOUR_BOT_TOKEN на реальный токен
+    logger.info("Бот успешно создан")
 
+    # Регистрация обработчиков
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     print("Бот запущен...")
+    logger.info("Бот начал опрос (polling)")
     app.run_polling()
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    logger.info(f"Получено сообщение от пользователя {user_id}: {text}")
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logger.error(msg="Ошибка при обработке обновления", exc_info=context.error)
+    if isinstance(update, Update) and update.effective_message:
+        try:
+            await update.effective_message.reply_text("Произошла внутренняя ошибка. Попробуйте позже.")
+        except Exception as inner_exc:
+            logger.error(f"Не удалось отправить сообщение об ошибке: {inner_exc}")
+
+app.add_error_handler(error_handler)
 
 
 if __name__ == '__main__':

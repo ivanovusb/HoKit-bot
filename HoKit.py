@@ -57,7 +57,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     current_state = user_state.get(user_id)
 
-    elif text == "Посмотреть каталог":
+    if text == "Посмотреть каталог":
     await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
 
     catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"

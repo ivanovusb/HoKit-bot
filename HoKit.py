@@ -1,4 +1,5 @@
 import os
+import httpx
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -59,17 +60,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "Посмотреть каталог":
         await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
+        
         catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"
 
-        async with context.bot._bot.request._client.stream('GET', catalog_url) as r:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(catalog_url)
             if r.status_code == 200:
-                file_data = b""
-                async for chunk in r.aiter_bytes():
-                    file_data += chunk
-                await update.message.reply_document(document=file_data, filename="Каталог.pdf")
+                await update.message.reply_document(document=r.content, filename="Каталог.pdf")
             else:
                 await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
-
         user_state[user_id] = STATE_MAIN_MENU
 
     elif text == "Оформить заказ":

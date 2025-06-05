@@ -58,18 +58,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_state = user_state.get(user_id)
 
     if text == "Посмотреть каталог":
-    await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
+        await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
+        catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"
 
-    catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"
-    async with context.bot._bot.request._client.stream('GET', catalog_url) as r:
-        if r.status_code == 200:
-            file_data = b""
-            async for chunk in r.aiter_bytes():
-                file_data += chunk
-            await update.message.reply_document(document=file_data, filename="Каталог.pdf")
-        else:
-            await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
-    user_state[user_id] = STATE_MAIN_MENU
+        async with context.bot._bot.request._client.stream('GET', catalog_url) as r:
+            if r.status_code == 200:
+                file_data = b""
+                async for chunk in r.aiter_bytes():
+                    file_data += chunk
+                await update.message.reply_document(document=file_data, filename="Каталог.pdf")
+            else:
+                await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
+
+        user_state[user_id] = STATE_MAIN_MENU
 
     elif text == "Оформить заказ":
         await update.message.reply_text("Напишите, какие товары и в каком количестве вы хотите заказать.")

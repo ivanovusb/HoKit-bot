@@ -1,13 +1,16 @@
 import os
+import httpx
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 # Твой Telegram ID для пересылки сообщений от пользователей
 
+CATALOG_LINK = os.getenv("CATALOG_LINK")
 YOUR_TELEGRAM_ID = os.getenv("YOUR_TELEGRAM_ID")# Мой ID чата
 TOKEN = os.getenv("TOKEN")
 if not TOKEN:
     raise ValueError("Не задана переменная окружения TOKEN")
+    
 
 # Приветственное сообщение
 WELCOME_MESSAGE = (
@@ -56,7 +59,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_state = user_state.get(user_id)
 
     if text == "Посмотреть каталог":
-        await update.message.reply_text(f"Актуальный каталог: {CATALOG_LINK}")
+        await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
+        
+        catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"
+
+        async with httpx.AsyncClient() as client:
+            r = await client.get(catalog_url)
+            if r.status_code == 200:
+                await update.message.reply_document(document=r.content, filename="Каталог.pdf")
+            else:
+                await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
         user_state[user_id] = STATE_MAIN_MENU
 
     elif text == "Оформить заказ":

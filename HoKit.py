@@ -67,7 +67,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         catalog_url = f"{CATALOG_LINK}"
         logger.info(f"Запрашиваемый URL: {catalog_url}")
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(catalog_url)
             logger.info(f"Статус ответа: {r.status_code}")
             if r.status_code == 200:

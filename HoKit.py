@@ -1,6 +1,7 @@
 import os
 import httpx
 import datetime
+import pytz
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,14 +64,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
         
         catalog_url = f"{CATALOG_LINK}"
-        now = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")  # Получаем текущее время
+        # Получаем текущее время по Москве
+        msk_time = datetime.datetime.now(pytz.timezone("Europe/Moscow"))
+        formatted_time = msk_time.strftime("%d.%m.%Y %H:%M (МСК)")
         logger.info(f"Запрашиваемый URL: {catalog_url}")
         
         async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(catalog_url)
             logger.info(f"Статус ответа: {r.status_code}")
             if r.status_code == 200 and 'application/pdf' in r.headers.get('Content-Type', ''):
-                caption = f"Каталог (актуален на {now})"
+                caption = f"Каталог (актуален на {formatted_time})"
                 await update.message.reply_document(
                 document=r.content,
                 filename="Каталог.pdf",

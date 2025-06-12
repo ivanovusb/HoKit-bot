@@ -23,7 +23,7 @@ WELCOME_MESSAGE = (
 )
 
 # Каталог (временно ссылка)
-CATALOG_LINK = "https://docs.google.com/spreadsheets/d/..." 
+#CATALOG_LINK = "https://docs.google.com/spreadsheets/d/..." 
 
 # Состояния диалога
 STATE_MAIN_MENU = 0

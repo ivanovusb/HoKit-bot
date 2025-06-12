@@ -64,7 +64,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "Посмотреть каталог":
         await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
         
-        catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"
+        catalog_url = f"{CATALOG_LINK}"
         logger.info(f"Запрашиваемый URL: {catalog_url}")
         
         async with httpx.AsyncClient() as client:

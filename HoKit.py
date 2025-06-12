@@ -1,5 +1,6 @@
 import os
 import httpx
+import datetime
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,9 +22,6 @@ WELCOME_MESSAGE = (
     "Вы можете ознакомиться с каталогом, оформить заказ или оставить заявку на заказ.\n\n"
     "Выберите нужный пункт меню:"
 )
-
-# Каталог (временно ссылка)
-#CATALOG_LINK = "https://docs.google.com/spreadsheets/d/..." 
 
 # Состояния диалога
 STATE_MAIN_MENU = 0
@@ -65,15 +63,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
         
         catalog_url = f"{CATALOG_LINK}"
+        now = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")  # Получаем текущее время
         logger.info(f"Запрашиваемый URL: {catalog_url}")
         
         async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(catalog_url)
             logger.info(f"Статус ответа: {r.status_code}")
-            if r.status_code == 200:
-                await update.message.reply_document(document=r.content, filename="Каталог.pdf")
+            if r.status_code == 200 and 'application/pdf' in r.headers.get('Content-Type', ''):
+                caption = f"Каталог (актуален на {now})"
+                await update.message.reply_document(
+                document=r.content,
+                filename="Каталог.pdf",
+                caption=caption
+            )
             else:
-                logger.warning(f"Ошибка при загрузке: {r.text[:200]}...")
+                logger.warning(f"Ошибка при загрузке PDF: {r.status_code}, {r.headers.get('Content-Type')}")
                 await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
         user_state[user_id] = STATE_MAIN_MENU
 

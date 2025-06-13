@@ -114,7 +114,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Формируем ссылку на экспорт Google Таблицы в XLSX
         catalog_xlsx_url = f"{CATALOG_LINK}/export?format=xlsx"
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(catalog_xlsx_url)
             if r.status_code == 200 and 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in r.headers.get('Content-Type', ''):
                 await update.message.reply_document(document=r.content, filename="Заявка.xlsx")

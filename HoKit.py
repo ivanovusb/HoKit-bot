@@ -112,7 +112,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "Оформить заказ":
         await update.message.reply_text("Подождите, я подготовлю каталог в формате Excel...")
         # Формируем ссылку на экспорт Google Таблицы в XLSX
-        catalog_xlsx_url = f"{CATALOG_LINK}/export?format=xlsx&gid=1"
+        catalog_xlsx_url = f"{CATALOG_LINK}/export?format=xlsx&gid=1965781488"
 
         async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(catalog_xlsx_url)

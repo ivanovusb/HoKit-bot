@@ -122,7 +122,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_state[user_id] = STATE_WAITING_FOR_ORDER_FILE
             else:
                  await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
-        user_state[user_id] = STATE_ORDERING
 
     elif text == "Связаться с оператором":
         await update.message.reply_text("Опишите вашу проблему, и мы свяжемся с вами.")

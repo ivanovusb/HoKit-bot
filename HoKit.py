@@ -30,6 +30,7 @@ STATE_ORDERING = 1
 STATE_CONTACT_INFO = 2
 STATE_SUPPORT = 3
 STATE_CUSTOM_ORDER = 4
+STATE_WAITING_FOR_ORDER_FILE = 5
 
 user_state = {}  # Хранит текущее состояние пользователя
 
@@ -49,6 +50,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(WELCOME_MESSAGE, reply_markup=reply_markup)
 
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    if user_state.get(user_id) != STATE_WAITING_FOR_ORDER_FILE:
+        return
+
+    document = update.message.document
+
+    if document.mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":  # .xlsx
+        file = await document.get_file()
+        await file.download_to_drive(custom_path=f"orders/order_{user_id}.xlsx")
+
+        # Перешли файл тебе
+        await context.bot.send_document(chat_id=YOUR_TELEGRAM_ID, document=document.file_id)
+        await context.bot.send_message(
+            chat_id=YOUR_TELEGRAM_ID,
+            text=f"Новый заказ от @{update.effective_user.username}"
+        )
+
+        await update.message.reply_text("Форма получена! Спасибо за заказ.")
+        user_state[user_id] = STATE_MAIN_MENU
+    else:
+        await update.message.reply_text("Пожалуйста, пришлите файл в формате .xlsx")
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -63,7 +88,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "Посмотреть каталог":
         await update.message.reply_text("Подождите, я подготовлю каталог в формате PDF...")
         
-        catalog_url = f"{CATALOG_LINK}"
+        catalog_url = f"{CATALOG_LINK}/export?format=pdf&gid=0"
         # Получаем текущее время по Москве
         msk_time = datetime.datetime.now(pytz.timezone("Europe/Moscow"))
         formatted_time = msk_time.strftime("%d.%m.%Y %H:%M (МСК)")
@@ -85,7 +110,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_state[user_id] = STATE_MAIN_MENU
 
     elif text == "Оформить заказ":
-        await update.message.reply_text("Напишите, какие товары и в каком количестве вы хотите заказать.")
+        await update.message.reply_text("Подождите, я подготовлю каталог в формате Excel...")
+        # Формируем ссылку на экспорт Google Таблицы в XLSX
+        catalog_xlsx_url = f"{CATALOG_LINK}/export?format=xlsx"
+
+        async with httpx.AsyncClient() as client:
+            r = await client.get(catalog_xlsx_url)
+            if r.status_code == 200 and 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in r.headers.get('Content-Type', ''):
+                await update.message.reply_document(document=r.content, filename="Заявка.xlsx")
+                await update.message.reply_text("Заполните колонку «Количество», затем пришлите файл обратно.")
+                user_state[user_id] = STATE_WAITING_FOR_ORDER_FILE
+            else:
+                 await update.message.reply_text("Не удалось загрузить каталог. Попробуйте позже.")
         user_state[user_id] = STATE_ORDERING
 
     elif text == "Связаться с оператором":
@@ -157,6 +193,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
 
     print("Бот запущен...")
     app.run_polling()

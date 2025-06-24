@@ -62,18 +62,39 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await document.get_file()
         await file.download_to_drive(custom_path=f"orders/order_{user_id}.xlsx")
 
-        # Перешли файл тебе
-        await context.bot.send_document(chat_id=YOUR_TELEGRAM_ID, document=document.file_id)
-        await context.bot.send_message(
+         # Получаем текущее время по Москве
+        msk_time = datetime.now(pytz.timezone("Europe/Moscow"))
+        timestamp = msk_time.strftime("%H-%M-%d-%m-%Y")  # Формат: часы-минуты-день-месяц-год
+
+        # Формируем уникальное имя файла
+        new_filename = f"Заявка_{timestamp}.xlsx"
+
+         # Скачиваем файл с новым названием
+        await file.download_to_drive(custom_path=new_filename)
+
+        # Пересылаем файл оператору
+        await context.bot.send_document(
             chat_id=YOUR_TELEGRAM_ID,
-            text=f"Новый заказ от @{update.effective_user.username}"
+            document=file.file_path,
+            filename=new_filename,
+            caption=f"Новая заявка от @{update.effective_user.username}"
         )
 
+        # Также можно отправить текстовое уведомление
+        message = (
+            f"📦 Новая заявка от пользователя:\n"
+            f"Пользователь: @{update.effective_user.username}\n"
+            f"ID: {user_id}\n"
+            f"Время получения: {msk_time.strftime('%d.%m.%Y %H:%M')}"
+        )
+
+        await context.bot.send_message(chat_id=YOUR_TELEGRAM_ID, text=message)
+
+        # Подтверждение пользователю
         await update.message.reply_text("Форма получена! Спасибо за заказ.")
         user_state[user_id] = STATE_MAIN_MENU
     else:
         await update.message.reply_text("Пожалуйста, пришлите файл в формате .xlsx")
-
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id

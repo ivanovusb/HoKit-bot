@@ -1,6 +1,6 @@
 import os
 import httpx
-import datetime
+from datetime import datetime, timezone
 import pytz
 import logging
 logging.basicConfig(level=logging.INFO)
